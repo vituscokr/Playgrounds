@@ -1,26 +1,40 @@
 ////: [Previous](@previous)
 //import Cocoa
 import UIKit
-
+//import Cocoa
 
 //var greeting = "Hello, playground"
 
-extension String {
+//extension String {
+//
+//
+//    func getRange(string:String) -> NSRange? {
+//        guard let range = self.range(of: string) else { return nil }
+//        return NSRange(range, in:self)
+//    }
+//}
+//extension String {
+//    var decodingUnicodeCharacters: String { applyingTransform(.init("Hex-Any"), reverse: false) ?? "" }
+//}
+//
+//
+//let string = "\Uc54c \Uc218 \Uc5c6 \Ub294 \Uc624 \Ub958 \Uc785 \Ub2c8 \Ub2e4"
+//
+//print(string.decodingUnicodeCharacters)
+//
+//
 
-    
-    func getRange(string:String) -> NSRange? {
-        guard let range = self.range(of: string) else { return nil }
-        return NSRange(range, in:self)
-    }
-}
-extension String {
-    var decodingUnicodeCharacters: String { applyingTransform(.init("Hex-Any"), reverse: false) ?? "" }
-}
 
 
-let string = "\Uc54c \Uc218 \Uc5c6 \Ub294 \Uc624 \Ub958 \Uc785 \Ub2c8 \Ub2e4"
+//let string = "\\\uc774\\\ubbf8 \\\uacb0\\\uc81c\\\uc644\\\ub8cc\\\ub41c \\\uc8fc\\\ubb38\\\uc785\\\ub2c8\\\ub2e4.";
+let string = "\\uc54c \\uc218 \\uc5c6\\ub294 \\uc624\\ub958\\uc785\\ub2c8\\ub2e4"
+let wI = NSMutableString( string: string)
+CFStringTransform( wI, nil, "Any-Hex/Java" as NSString, true )
 
-print(string.decodingUnicodeCharacters)
+print(wI)
+
+
+
 
 /*
 
