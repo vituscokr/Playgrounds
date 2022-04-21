@@ -7,5 +7,6 @@
         <page name='Date'/>
         <page name='String'/>
         <page name='Cocurrency'/>
+        <page name='Subject'/>
     </pages>
 </playground>
