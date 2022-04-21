@@ -8,5 +8,6 @@
         <page name='String'/>
         <page name='Cocurrency'/>
         <page name='Subject'/>
+        <page name='CodeMaker'/>
     </pages>
 </playground>
