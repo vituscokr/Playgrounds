@@ -7,7 +7,8 @@
         <page name='Date'/>
         <page name='String'/>
         <page name='Cocurrency'/>
-        <page name='Subject'/>
         <page name='CodeMaker'/>
+        <page name='Subject'/>
+        <page name='DataStructures'/>
     </pages>
 </playground>
