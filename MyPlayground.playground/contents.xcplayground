@@ -10,5 +10,6 @@
         <page name='CodeMaker'/>
         <page name='Subject'/>
         <page name='DataStructures'/>
+        <page name='Combine.xcplaygroundpage'/>
     </pages>
 </playground>
