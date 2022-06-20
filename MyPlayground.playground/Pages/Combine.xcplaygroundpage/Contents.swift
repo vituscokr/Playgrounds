@@ -2,6 +2,391 @@
 
 import Foundation
 import Combine
+import UIKit
+
+var subscriptions = Set<AnyCancellable>()
+
+
+example(of: "async / await") {
+    let subject = CurrentValueSubject<Int, Never>(0)
+    Task {
+        for await element in subject.values {
+            print("Element: \(element)")
+        }
+        print("Completed.")
+    }
+    subject.send(1)
+    subject.send(2)
+    subject.send(3)
+    
+    subject.send(completion:  .finished)
+    
+}
+
+example(of: "Type erasure") {
+    let subject = PassthroughSubject<Int,Never>()
+    let publisher = subject.eraseToAnyPublisher()
+    publisher
+        .sink(receiveValue: {
+            print($0)
+        })
+        .store(in: &subscriptions)
+    
+    subject.send(0)
+    //publisher.send(1)
+    
+}
+
+example(of: "Dynamically adjusting Demand") {
+    final class IntSubscriber : Subscriber {
+        typealias Input = Int
+        typealias Failure = Never
+        
+        func receive(subscription: Subscription) {
+            print("구독을 시작합니다.")
+            //subscription.request(.unlimited)
+            subscription.request(.max(2))
+        }
+        
+        func receive(_ input: Int) -> Subscribers.Demand {
+         
+                print("Received value : \(input)")
+            switch(input) {
+            case 1:
+                return .max(2)
+            case 3:
+                return .max(1)
+            default:
+                return .none
+            }
+            //return .unlimited
+        }
+        
+        func receive(completion: Subscribers.Completion<Never>) {
+            print("Received  completion", completion)
+        }
+    }
+    
+    let subscriber = IntSubscriber()
+    let subject = PassthroughSubject<Int, Never>()
+    
+    subject.subscribe(subscriber)
+    
+    subject.send(1)
+    subject.send(2)
+    subject.send(3)
+    subject.send(4)
+    subject.send(5)
+    subject.send(6)
+    
+}
+
+example(of: "CurrentValueSubject") {
+    var subscription = Set<AnyCancellable>()
+    let subject = CurrentValueSubject<Int, Never>(0)
+    subject
+        .print()
+        .sink(
+            receiveValue: {
+                print($0)
+            }
+        )
+        .store(in: &subscription)
+    subject.send(1)
+    subject.send(2)
+    
+    print(subject.value)
+    subject.value = 3
+    
+    print(subject.value)
+    subject.send(completion: .finished)
+    
+}
+
+
+
+example(of: "PassthroughtSubject") {
+    
+    //define error
+    enum MyError : Error {
+        case test
+    }
+    
+    final class StringSubscriber : Subscriber {
+        typealias Input = String
+        typealias Failure = MyError
+        
+        func receive(subscription: Subscription) {
+            print("구독을 시작합니다.")
+            //subscription.request(.unlimited)
+            subscription.request(.max(3))
+        }
+        
+        func receive(_ input: String) -> Subscribers.Demand {
+         
+            print("Received value : \(input)")
+            return input == "World" ? .max(1) : .none
+            //return .unlimited
+        }
+        
+        func receive(completion: Subscribers.Completion<MyError>) {
+            print("Received  completion", completion)
+        }
+    }
+    
+    let subscriber = StringSubscriber()
+    
+    let subject = PassthroughSubject<String, MyError>()
+    subject.subscribe(subscriber)
+    
+    let subscription = subject.sink(
+        receiveCompletion:{ completion in
+            print("Received completion (sink)", completion)
+        },
+          receiveValue: { value in
+         
+                print("Received value (sink)", value)
+          }
+    )
+    
+    subject.send("Hello")
+    subject.send("World")
+    
+    subject.send(completion: .failure(MyError.test))
+}
+
+example(of: "PassthroughtSubject") {
+    let subject = PassthroughSubject<String, Never>()
+    subject
+        .sink { str in
+            print(str)
+        }
+        .store(in: &subscriptions)
+    
+    
+    subject.send("Hello")
+    subject.send("World")
+    
+    subject.send(completion: .finished)
+    
+    subject.send("Still There?")
+}
+
+example(of: "Future") {
+    func futureIncrement(
+        integer : Int ,
+        afterDelay delay: TimeInterval) -> Future<Int,Never>{
+        
+            Future<Int,Never> { promise in
+                print("Original")
+                DispatchQueue.global().asyncAfter(deadline : .now() + delay) {
+                    promise(.success(integer + 1))
+                }
+            }
+    }
+    
+    let future = futureIncrement(integer: 1, afterDelay: 3)
+    future
+        .sink(receiveCompletion:{ print($0)},
+              receiveValue: { print($0) }
+        )
+        .store(in : &subscriptions)
+    
+//    future
+//      .sink(receiveCompletion: { print("Second", $0) },
+//            receiveValue: { print("Second", $0) })
+//      .store(in: &subscriptions)
+    
+}
+
+example(of: "Custom Subscriber") {
+    let publisher = (1...6).publisher
+    
+    final class IntSubscriber : Subscriber {
+        typealias Input = Int
+        typealias Failure = Never
+        
+        func receive(subscription: Subscription) {
+            print("구독을 시작합니다.")
+            //subscription.request(.unlimited)
+            subscription.request(.max(3))
+        }
+        
+        func receive(_ input: Int) -> Subscribers.Demand {
+         
+                print("Received value : \(input)")
+                return .none
+            //return .unlimited
+        }
+        
+        func receive(completion: Subscribers.Completion<Never>) {
+            print("Received  completion", completion)
+        }
+    }
+    
+    let subscriber = IntSubscriber()
+    
+    publisher.subscribe(subscriber)
+    
+    
+}
+
+example(of: "assgin(to:)") {
+    class SomeObject {
+        @Published var value = 0
+    }
+    
+    let object = SomeObject()
+    object.$value
+        .sink {
+            print($0)
+        }
+
+    (0..<10).publisher
+        .assign(to: &object.$value)
+}
+
+example(of: "publisher and subscriber") {
+    let center = NotificationCenter.default
+    let myNotification = Notification.Name("MyNotification")
+    
+    let publisher = center.publisher(for: myNotification, object: nil)
+    
+    let subscription = publisher
+        .print()
+        .sink { _ in
+            print("Notification received from a publisher")
+        }
+    
+    center.post(name: myNotification, object: nil)
+    
+    subscription.cancel()
+}
+
+example(of: "Just") {
+    let just = Just("Hello world!")
+    just
+        .sink(
+          receiveCompletion: {
+            print("Received completion", $0)
+        },
+          receiveValue: {
+            print("Received value", $0)
+        })
+        .store(in: &subscriptions)
+}
+
+example(of: "assing(to:on:)") {
+    class SomeObject {
+        var value:String = "" {
+            didSet {
+                print(value)
+            }
+        }
+    }
+    
+    let object = SomeObject()
+    
+    ["hello", "world"].publisher
+        .assign(to: \.value, on: object)
+        .store(in: &subscriptions)
+}
+
+
+
+
+example(of: "CurrentValueSubject") {
+    let subject = CurrentValueSubject<Int, Never>(0)
+    subject
+        .print()
+        .sink(receiveValue: { print($0)})
+        .store(in: &subscriptions)
+    
+    print(subject.value)
+    subject.send(1)
+    subject.send(2)
+    
+    print(subject.value)
+    
+    subject.send(completion: .finished)
+    
+    
+}
+
+example(of: "Type erasure") {
+    
+    let subject = PassthroughSubject<Int, Never>()
+    
+    let publisher = subject.eraseToAnyPublisher()
+    
+    publisher
+        .sink(receiveValue: { print($0)})
+        .store(in: &subscriptions)
+    
+    subject.send(1)
+    
+}
+//
+
+example(of: "Collect") {
+    ["A","B","C","D"].publisher
+        .collect(2)
+        .sink(receiveCompletion: { print($0) },
+              receiveValue: { print($0)})
+        .store(in: &subscriptions)
+    
+}
+
+example(of: "map") {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .spellOut
+    [123,4,56].publisher
+        .map {
+            formatter.string(for: NSNumber(integerLiteral: $0)) ?? ""
+        }
+        .sink(receiveCompletion: { print($0) },
+              receiveValue: { print($0)})
+        .store(in: &subscriptions)
+}
+
+example(of: "replaceNil") {
+    ["A","B",nil,"C"].publisher
+        .replaceNil(with: "-")
+        .map { $0!}
+        .sink(receiveCompletion: { print($0) },
+              receiveValue: { print($0)})
+        .store(in: &subscriptions)
+}
+
+example(of: "replaceEmpty(with:)") {
+    let empty = Empty<Int, Never>()
+    
+    empty
+        .replaceEmpty(with: 1)
+        .sink { value in
+            print(value)
+        }
+        .store(in: &subscriptions)
+}
+
+example(of: "scan") {
+    
+    var dailyGainLoss: Int { .random(in: -10...10)}
+    let august2019 = (0..<22)
+        .map { _ in dailyGainLoss }
+        .publisher
+    august2019
+        .scan(50) { latest, current in
+            print("latest:" , latest)
+            print("current:" , current)
+            return max(0, latest + current)
+            
+        }
+        .sink { value in
+            print(value)
+        }
+        .store(in: &subscriptions)
+}
 
 example(of: "Publisher") {
     let myNotification = Notification.Name("MyNotification")
@@ -32,9 +417,45 @@ example(of: "Subscriber") {
     center.post(name: myNotification , object: nil )
     
     subscription.cancel()
+
 }
 
+example(of: "Just") {
+    let just = Just("Hello World")
+    _ = just.sink(
+        receiveCompletion: { value in
+        print("receive completion:\(value)")
+    }, receiveValue : { value in
+        print("receive value: \(value)")
+    }
+    ) //sink end
+    
+    _ = just.sink(
+        receiveCompletion: { value in
+        print("(another) receive completion:\(value)")
+    }, receiveValue : { value in
+        print("(another) receive value: \(value)")
+    }
+    ) //sink end
+}
 
+//checkbox 와 UIKit 에서 유용하게 사용한다는 데?
+example(of: "assing(to:on:)") {
+    class SomeObject {
+        var value : String = ""  {
+            didSet {
+                print(value)
+            }
+        }
+    }
+    
+    let object = SomeObject()
+    let publisher = ["Hello", "World"].publisher
+    _ = publisher
+        .assign(to : \.value , on:object )
+}
+
+ */
 
 //https://medium.com/harrythegreat/swift-combine-입문하기-가이드-1-525ccb94af57
 //https://www.raywenderlich.com/books/combine-asynchronous-programming-with-swift/v2.0/chapters/2-publishers-subscribers
@@ -66,8 +487,7 @@ class CustomSubscriber :  Subscriber {
 
     // 4
     func receive(subscription: Subscription) {
-        print("구독을 시작합니다.")
-        subscription.request(.unlimited)
+
         //subscription.request(.max(3))
     }
     
