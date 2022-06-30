@@ -3,11 +3,11 @@
 import Foundation
 
 
-let deck = Deck()
+let gameTable = GameTable()
+
+gameTable.place(to: 0)
 
 
-print(deck.count)
-print(deck.isEmpty) 
-
+gameTable.show() 
 
 //: [Next](@next)
