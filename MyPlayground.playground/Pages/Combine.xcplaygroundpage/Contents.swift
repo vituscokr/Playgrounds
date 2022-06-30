@@ -7,6 +7,90 @@ import UIKit
 var subscriptions = Set<AnyCancellable>()
 
 
+example(of: "filter all the things") {
+    (1...100).publisher
+        .drop(while: { $0 <= 50 })
+        .prefix(20)
+        .filter({
+            $0 % 2 == 0
+        })
+        .sink(receiveCompletion : { finished  in
+            print("completion \(finished)")
+        }, receiveValue: {
+            print($0)
+        })
+        .store(in : &subscriptions)
+}
+
+example(of: "prefix(untilOutputFrom:)") {
+    let isReady = PassthroughSubject<Void, Never>()
+    let taps = PassthroughSubject<Int, Never>()
+    
+    taps
+        .prefix(untilOutputFrom: isReady)
+        .sink(receiveCompletion : { finished  in
+            print("completion \(finished)")
+        }, receiveValue: {
+            print($0)
+        })
+        .store(in : &subscriptions)
+    
+    (1...5).forEach { n in
+        taps.send(n)
+
+        if n == 3 {
+            isReady.send()
+        }
+    }
+}
+
+
+example(of: "prefix(while:)") {
+    let numbers = (1...10).publisher
+    numbers
+        .prefix(while: {$0 < 3})
+        .sink(receiveCompletion : { finished  in
+            print("completion \(finished)")
+        }, receiveValue: {
+            print($0)
+        })
+        .store(in : &subscriptions)
+}
+
+example(of: "prefix") {
+    let numbers = (1...10).publisher
+    numbers
+        .prefix(2)
+        .sink(receiveCompletion : { finished  in
+            print("completion \(finished)")
+        }, receiveValue: {
+            print($0)
+        })
+        .store(in : &subscriptions)
+}
+
+example(of: "drop(untilOutputFrom:)") {
+    let isReady = PassthroughSubject<Void, Never>()
+    let taps = PassthroughSubject<Int, Never>()
+    
+    taps
+        .drop(untilOutputFrom: isReady)
+        .sink(receiveCompletion : { finished  in
+            print("completion \(finished)")
+        }, receiveValue: {
+            print($0)
+        })
+        .store(in : &subscriptions)
+    
+    (1...5).forEach { n in
+        taps.send(n)
+
+        if n == 3 {
+            isReady.send()
+        }
+    }
+}
+
 example(of: "drop(while:)") {
     let numbers = (1...10).publisher
     numbers
