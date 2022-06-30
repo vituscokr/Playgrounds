@@ -12,6 +12,7 @@
         <page name='DataStructures'/>
         <page name='Combine'/>
         <page name='Operators'/>
-        <page name='MyViewController.xcplaygroundpage'/>
+        <page name='MyViewController'/>
+        <page name='Card.xcplaygroundpage'/>
     </pages>
 </playground>
