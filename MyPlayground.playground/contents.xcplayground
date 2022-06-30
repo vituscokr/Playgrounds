@@ -11,6 +11,7 @@
         <page name='Subject'/>
         <page name='DataStructures'/>
         <page name='Combine'/>
-        <page name='Operators.xcplaygroundpage'/>
+        <page name='Operators'/>
+        <page name='MyViewController.xcplaygroundpage'/>
     </pages>
 </playground>
