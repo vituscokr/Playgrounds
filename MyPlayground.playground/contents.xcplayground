@@ -7,7 +7,12 @@
         <page name='Date'/>
         <page name='String'/>
         <page name='Cocurrency'/>
-        <page name='Subject'/>
         <page name='CodeMaker'/>
+        <page name='Subject'/>
+        <page name='DataStructures'/>
+        <page name='Combine'/>
+        <page name='Operators'/>
+        <page name='MyViewController'/>
+        <page name='Card.xcplaygroundpage'/>
     </pages>
 </playground>
