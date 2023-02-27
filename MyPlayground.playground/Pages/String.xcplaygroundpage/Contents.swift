@@ -1,6 +1,48 @@
 ////: [Previous](@previous)
 //import Cocoa
 import UIKit
+
+
+//convertDictionary
+
+
+func convertToDictionary(text:String) -> [String:Any]? {
+    
+    guard let data = text.data(using: .utf8) else {
+        return nil
+    }
+    
+    do {
+        return try JSONSerialization.jsonObject(with: data, options: []) as? [String:Any]
+    }catch {
+        print(error.localizedDescription)
+    }
+    return nil
+}
+
+
+let testString = """
+{
+"userId":"test",
+"password":"test",
+"userlevel": 1,
+"isAdmin": false
+}
+"""
+
+if let converted = convertToDictionary(text: testString) as? [String:Any] {
+    print(converted)
+
+    print(converted["isAdmin"])
+}
+
+
+
+
+
+
+
+
 //import Cocoa
 
 //var greeting = "Hello, playground"
